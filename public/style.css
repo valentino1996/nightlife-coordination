@@ -1,0 +1,37 @@
+		
+body {
+	background-image: url("http://nulled-warez.com/wp-content/uploads/2016/11/Neon_Lamps_Synthwave_VJ_Loop_Screen-590x270.jpg");
+}
+		
+h1{
+	color: white;
+	font-size: 50px;
+	margin-bottom: 7%;
+	margin-top: 3%;
+}
+		
+input{
+	font-size: 20px;
+	width: 40%;
+	border-radius: 10px;
+	border-width: 4px;
+	border-color: #000;
+	margin-right: 5%;
+	padding: 5px;
+}
+		
+button{
+	background: rgba(0,0,0,0.5);
+	color: white;
+	text-decoration: none !important;
+}
+		
+#field{
+	color: white;
+	width: 80%;
+	margin: 10px;
+}
+		
+div{
+	
+}

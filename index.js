@@ -3,6 +3,8 @@ var Yelp = require("yelp");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var session = require("express-session");
+var findOrCreate = require("mongoose-findorcreate");
+var Strategy = require("passport-strategy");
 var passport = require('passport')
   , TwitterStrategy = require('passport-twitter').Strategy;
 
@@ -14,33 +16,9 @@ var yelp = new Yelp({
   token: '-BOuVydFW0j-CRDbfZBSiQ-PMjul8cK_',
   token_secret: 'blzRg8H_6BrhjNW02bopF18ucVg'
 });
-  
+
 var token='2538355556-Jfbhqubjts1KUZq4FuWv7W6phmskvwc9YjUHTob';
 var tokenSecret='aqqDTgeV0vUmJDAqSt9PojULNNmMq8T30DclSZX389LSN';
-
-//after adding this line of code I was able to make this kinda working
-//var User={findOrCreate:function(){}}; //this is wrong
-
-passport.use(new TwitterStrategy({
-    consumerKey: '9k7QBl1PumkC00snE9Qm4Srqn',
-    consumerSecret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
-    callbackURL: "http://127.0.0.1:8080/"
-  },
-  function(token, tokenSecret, profile, done) {
-    //User.findOrCreate({ twitterId: profile.id }, function(err, user) {
-		//console.log(profile.id);
-		//console.log(user);
-		//if (err){ 
-		//console.log(err);
-		//return done(err); }
-		//console.log(done(null, user));
-		console.log(profile);
-		console.log("df");
-		return done(null, profile);
-    //});
-  }
-));
-
 
 /*
 var client = new Twitter({
@@ -82,12 +60,34 @@ mongoose.connection.once("open", function(err){
 	else{
 		
 		var schema = mongoose.Schema({
-			name: {unique: true, type: String},
-			persons: {type: Number}
+			//name: {unique: true, type: String},
+			//persons: {type: Number}
+			twitter_username: {unique: true, type: String}
 		});
 		
-		var Going = mongoose.model("Places", schema);
+		var User = mongoose.model("User", schema);
+		//User.plugin(findOrCreate);
 	}
+	
+	passport.use(new TwitterStrategy({
+		consumerKey: '9k7QBl1PumkC00snE9Qm4Srqn',
+		consumerSecret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
+		callbackURL: "http://127.0.0.1:8080/"
+	},
+	function(token, tokenSecret, profile, done) {
+		console.log("a"); //this does not log on console
+		User.findOrCreate({ twitter_username: profile.id }, function(err, user) {
+			console.log(profile.id);
+			console.log(user);
+			if (err){ 
+				console.log(err);
+				return done(err); }
+				console.log(done(null, user));
+				console.log("df");
+				return done(null, profile);
+			});
+		}
+	));
 
 	app.post("/url", function(req, res){
 	

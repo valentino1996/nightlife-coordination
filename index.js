@@ -19,18 +19,25 @@ var token='2538355556-Jfbhqubjts1KUZq4FuWv7W6phmskvwc9YjUHTob';
 var tokenSecret='aqqDTgeV0vUmJDAqSt9PojULNNmMq8T30DclSZX389LSN';
 
 //after adding this line of code I was able to make this kinda working
-var User={findOrCreate:function(){}};
+//var User={findOrCreate:function(){}}; //this is wrong
 
 passport.use(new TwitterStrategy({
     consumerKey: '9k7QBl1PumkC00snE9Qm4Srqn',
     consumerSecret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
-    callbackURL: "http://127.0.0.1:8080/auth/twitter/callback"
+    callbackURL: "http://127.0.0.1:8080/"
   },
   function(token, tokenSecret, profile, done) {
-    User.findOrCreate({ twitterId: profile.id }, function(err, user) {
-      if (err) { return done(err); }
-      return done(null, user);
-    });
+    //User.findOrCreate({ twitterId: profile.id }, function(err, user) {
+		//console.log(profile.id);
+		//console.log(user);
+		//if (err){ 
+		//console.log(err);
+		//return done(err); }
+		//console.log(done(null, user));
+		console.log(profile);
+		console.log("df");
+		return done(null, profile);
+    //});
   }
 ));
 
@@ -102,7 +109,7 @@ mongoose.connection.once("open", function(err){
 	
 	app.get('/auth/twitter', passport.authenticate('twitter'));
 
-	app.get('/auth/twitter/callback',
+	app.get('/oauth/authenticate',
 		passport.authenticate('twitter', { successRedirect: '/',
                                      failureRedirect: '/login' }));
 	

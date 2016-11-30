@@ -20,14 +20,6 @@ var yelp = new Yelp({
 var token='2538355556-Jfbhqubjts1KUZq4FuWv7W6phmskvwc9YjUHTob';
 var tokenSecret='aqqDTgeV0vUmJDAqSt9PojULNNmMq8T30DclSZX389LSN';
 
-/*
-var client = new Twitter({
-  consumer_key: '9k7QBl1PumkC00snE9Qm4Srqn',
-  consumer_secret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
-  access_token_key: '2538355556-Jfbhqubjts1KUZq4FuWv7W6phmskvwc9YjUHTob',
-  access_token_secret: 'aqqDTgeV0vUmJDAqSt9PojULNNmMq8T30DclSZX389LSN'
-});
-*/
 mongoose.connect("mongodb://test:test@ds053156.mlab.com:53156/mongodb-test-valentino", function (err) {
 	
 	if (err) {
@@ -42,6 +34,8 @@ mongoose.connect("mongodb://test:test@ds053156.mlab.com:53156/mongodb-test-valen
 app.use(express.static("public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(session({
   resave: false,
@@ -49,7 +43,7 @@ app.use(session({
   secret: 'bla bla bla' 
 }));
 
-var str ="";
+var user;
 
 mongoose.connection.once("open", function(err){
 	
@@ -60,39 +54,39 @@ mongoose.connection.once("open", function(err){
 	else{
 		
 		var schema = mongoose.Schema({
-			//name: {unique: true, type: String},
-			//persons: {type: Number}
-			twitter_username: {unique: true, type: String}
+			id: {unique: true, type: Number},
+			places: {type: Array}
 		});
 		
 		var User = mongoose.model("User", schema);
-		//User.plugin(findOrCreate);
 	}
 	
 	passport.use(new TwitterStrategy({
 		consumerKey: '9k7QBl1PumkC00snE9Qm4Srqn',
 		consumerSecret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
-		callbackURL: "http://127.0.0.1:8080/"
+		callbackURL: "http://127.0.0.1:8080/auth/twitter/callback"
 	},
 	function(token, tokenSecret, profile, done) {
-		console.log("a"); //this does not log on console
-		User.findOrCreate({ twitter_username: profile.id }, function(err, user) {
+		
 			console.log(profile.id);
-			console.log(user);
-			if (err){ 
-				console.log(err);
-				return done(err); }
-				console.log(done(null, user));
-				console.log("df");
-				return done(null, profile);
+			user=Number(profile.id);
+			
+			passport.serializeUser(function(user, done) {
+				done(null, user);
 			});
+
+			passport.deserializeUser(function(user, done) {
+				done(null, user);
+			});
+			
+			return done(null, profile.id);
+			
 		}
 	));
 
 	app.post("/url", function(req, res){
 	
 		var loc = req.body.loc;
-		str="";
 	
 		yelp.search({ term: 'food', location: loc, limit:20 })
 			.then(function (data) {
@@ -107,9 +101,20 @@ mongoose.connection.once("open", function(err){
 	
 	});
 	
+	app.post("/places", function(req, res){
+		
+		var name = req.body.name;
+		console.log(name);
+		
+	});
+	
 	app.get('/auth/twitter', passport.authenticate('twitter'));
+	
+	app.get("/login", function(req, res){
+		res.send("something went wrong");
+	})
 
-	app.get('/oauth/authenticate',
+	app.get('/auth/twitter/callback',
 		passport.authenticate('twitter', { successRedirect: '/',
                                      failureRedirect: '/login' }));
 	

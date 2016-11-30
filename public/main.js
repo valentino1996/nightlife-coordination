@@ -1,5 +1,6 @@
 var str="";
 var id;
+var info;
 
 $(document).ready(function(){
 	
@@ -13,8 +14,8 @@ $(document).ready(function(){
 			},
 			success: function(data){
 				
+				info=data;
 				str="";
-				
 				for (var i=0; i<data.businesses.length; i++){
 					
 					str+='<div>'+'<img src="'+data.businesses[i].image_url+'">'+'<p>'+data.businesses[i].name+'</p>'+'<button class="btn" id="'+i+'">0 GOING</button>'+'<p>'+data.businesses[i].snippet_text+'</p></div>';
@@ -32,6 +33,19 @@ $(document).ready(function(){
 		
 		id = $(this).prop('id');
 		console.log(id);
+		console.log(info);
+		
+		$.ajax({
+			url: "/places",
+			type:"POST",
+			dataType: "json",
+			data:{
+				name: id
+			},
+			success:{
+				
+			}
+		});
 		
 	});
 	

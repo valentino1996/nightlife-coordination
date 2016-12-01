@@ -43,7 +43,10 @@ app.use(session({
   secret: 'bla bla bla' 
 }));
 
-var user;
+var user="";
+var bool=false;
+var arr=[];
+var user_arr=[];
 
 mongoose.connection.once("open", function(err){
 	
@@ -54,11 +57,26 @@ mongoose.connection.once("open", function(err){
 	else{
 		
 		var schema = mongoose.Schema({
-			id: {unique: true, type: Number},
-			places: {type: Array}
+			user_id: {unique: true, type: Number},
+			places_id: {type: Array}
 		});
 		
 		var User = mongoose.model("User", schema);
+		
+		var places = mongoose.Schema({
+			id: {unique:true, type:Number},
+			places: {type:Array}
+		});
+		
+		var Places = mongoose.model("Places", places);
+		
+		Places.create({id:1, places:[]}, function(err, snippet){
+			
+			console.log("created new db places");
+			return;
+			
+		});
+		
 	}
 	
 	passport.use(new TwitterStrategy({
@@ -69,7 +87,7 @@ mongoose.connection.once("open", function(err){
 	function(token, tokenSecret, profile, done) {
 		
 			console.log(profile.id);
-			user=Number(profile.id);
+			user=profile.id;
 			
 			passport.serializeUser(function(user, done) {
 				done(null, user);
@@ -106,6 +124,54 @@ mongoose.connection.once("open", function(err){
 		var name = req.body.name;
 		console.log(name);
 		
+		if(user==""){
+			console.log("redirecting...");
+			res.redirect("/auth/twitter");
+			return;
+		}
+		
+		User.create({user_id: user, places_id: name}, function(err, snippet){
+			
+			if(err||!snippet){
+				console.log("User not created");
+				return;
+			}
+			
+			console.log("new user created");
+			bool=true;
+			res.json({a:1});
+		});
+		
+		//if(bool=true){
+			/*Places.findOne({id:1}, function(err, snippet){
+				arr = snippet.places;
+				if(snippet.places.indexOf(name)==-1){
+					arr.push([name,1]);
+					bool=false
+					return;*/
+		//}
+		//else{
+			User.findOne({user_id: user}, function(err, snippet){
+				console.log("user found");
+				user_arr=snippet.places_id;
+				console.log(user_arr);
+				if(user_arr.indexOf(name)==-1){
+					user_arr.push(name);
+					User.findOneAndUpdate({user_id:user},{places_id: user_arr}, function(err, snippet){
+						console.log("snippet updated");
+					});
+					res.json({a:1});
+				}
+				else{
+					user_arr.splice(user_arr.indexOf(name),1);
+					User.findOneAndUpdate({user_id:user},{places_id: user_arr}, function(err, snippet){
+						console.log("snippet updated");
+					});
+					res.json({a:0});
+				}
+			});
+					
+		//}
 	});
 	
 	app.get('/auth/twitter', passport.authenticate('twitter'));

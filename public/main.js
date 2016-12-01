@@ -40,10 +40,15 @@ $(document).ready(function(){
 			type:"POST",
 			dataType: "json",
 			data:{
-				name: id
+				name: info.businesses[id].name,
 			},
-			success:{
-				
+			success: function(obj){
+				if(obj.a==1){
+					$("#"+id).html("1 GOING");
+				}
+				else{
+					$("#"+id).html("0 GOING");
+				}
 			}
 		});
 		

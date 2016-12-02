@@ -3,7 +3,6 @@ var Yelp = require("yelp");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var session = require("express-session");
-var findOrCreate = require("mongoose-findorcreate");
 var Strategy = require("passport-strategy");
 var passport = require('passport')
   , TwitterStrategy = require('passport-twitter').Strategy;
@@ -44,9 +43,11 @@ app.use(session({
 }));
 
 var user="";
-var bool=false;
 var arr=[];
 var user_arr=[];
+var loc="";
+var info;
+var array=[];
 
 mongoose.connection.once("open", function(err){
 	
@@ -82,7 +83,7 @@ mongoose.connection.once("open", function(err){
 	passport.use(new TwitterStrategy({
 		consumerKey: '9k7QBl1PumkC00snE9Qm4Srqn',
 		consumerSecret: 'frvscEtdk78q9pp08AVS4OYPvNFYHEnKBWUB9KSTwmn1lZvGsM',
-		callbackURL: "http://127.0.0.1:8080/auth/twitter/callback"
+		callbackURL: "http://nightlife-coordination-vali.herokuapp.com/auth/twitter/callback"
 	},
 	function(token, tokenSecret, profile, done) {
 		
@@ -101,21 +102,60 @@ mongoose.connection.once("open", function(err){
 			
 		}
 	));
+	
+	app.post("/", function(req, res){
+		
+		if(loc!==""){
+			console.log("home "+loc);
+			res.json({key1:info, key2:array});
+		}
+		else{
+			console.log("home");
+		}
+		
+	});
 
 	app.post("/url", function(req, res){
 	
-		var loc = req.body.loc;
+		loc = req.body.loc;
 	
 		yelp.search({ term: 'food', location: loc, limit:20 })
 			.then(function (data) {
+				
+				info=data;
+				
+			if(user==""){
+				
+				array=[];
+				console.log("sending data");
+				res.json({key1:info, key2:array});
 			
-				res.json(data);
+			}
+		
+			else{
+				
+				User.findOne({user_id: user}, function(err, snippet){
+					array=[];
+					if(err||!snippet){
+						console.log(err);
+						res.json({key1:info, key2:array});
+						return;
+				}
+				
+				array=snippet.places_id;
+				console.log("sending 2 variables");
+				res.json({key1:info, key2:array});
+				});
+			}
+		
 			})
 			.catch(function (err) {
 				console.error(err);
+				res.json({error:1});
 			});
  
 		console.log(loc);
+		console.log(info);
 	
 	});
 	
@@ -126,7 +166,7 @@ mongoose.connection.once("open", function(err){
 		
 		if(user==""){
 			console.log("redirecting...");
-			res.redirect("/auth/twitter");
+			res.json({a:"login"});
 			return;
 		}
 		
@@ -138,23 +178,14 @@ mongoose.connection.once("open", function(err){
 			}
 			
 			console.log("new user created");
-			bool=true;
 			res.json({a:1});
 		});
 		
-		//if(bool=true){
-			/*Places.findOne({id:1}, function(err, snippet){
-				arr = snippet.places;
-				if(snippet.places.indexOf(name)==-1){
-					arr.push([name,1]);
-					bool=false
-					return;*/
-		//}
-		//else{
 			User.findOne({user_id: user}, function(err, snippet){
 				console.log("user found");
 				user_arr=snippet.places_id;
 				console.log(user_arr);
+				
 				if(user_arr.indexOf(name)==-1){
 					user_arr.push(name);
 					User.findOneAndUpdate({user_id:user},{places_id: user_arr}, function(err, snippet){
@@ -162,6 +193,7 @@ mongoose.connection.once("open", function(err){
 					});
 					res.json({a:1});
 				}
+				
 				else{
 					user_arr.splice(user_arr.indexOf(name),1);
 					User.findOneAndUpdate({user_id:user},{places_id: user_arr}, function(err, snippet){
@@ -171,13 +203,12 @@ mongoose.connection.once("open", function(err){
 				}
 			});
 					
-		//}
 	});
 	
 	app.get('/auth/twitter', passport.authenticate('twitter'));
 	
 	app.get("/login", function(req, res){
-		res.send("something went wrong");
+		res.send("twitter authentication went wrong");
 	})
 
 	app.get('/auth/twitter/callback',
